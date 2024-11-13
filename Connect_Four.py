@@ -83,22 +83,78 @@ print_board(board)
 game_over = False
 turn = 0
 
-while not game_over:
-    #ask for player 1 input
-    if turn == 0:
-        col = int(input("Player 1, Make your Selection(0-6):"))
-        #player 1 will drop a piece on the board
-        if is_valid_location(board, col):
-            row = get_next_open_row(board, col)
-            drop_piece(board, row, col, 1)
-    else:#ask for player 2 input
-        selection = int(input("Player 2, Make your Selection(0-6):"))
-        #player2 will drop a piece on the board
-        if is_valid_location(board, col):
-            row = get_next_open_row(board, col)
-            drop_piece(board, row, col, 2)
+#initalize pygame
+pygame.init()
 
-    print_board(board)
-    
-    turn += 1
-    turn = turn % 2 #switch between p1 and p2 alternatively
+#define our screen size
+SQUARESIZE = 100
+
+#define width and height of board
+width = COLUMN_COUNT * SQUARESIZE
+height = (ROW_COUNT + 1) * SQUARESIZE
+
+size = (width, height)
+
+RADIUS = int(SQUARESIZE / 2 - 5)
+
+screen = pygame.display.set_mode(size)
+
+#calling function draw_board again
+
+draw_board(board)
+pygame.display.update()
+
+myfont = pygame.font.SysFont("monospace", 75)
+
+while not game_over:
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit()
+        
+        if event.type == pygame.MOUSEMOTON:
+            pygame.draw.rect(screen, BLACK, (0, 0, width, SQUARESIZE))
+            posx = event.pos[0]
+            if turn == 0:
+                pygame.draw.circle(screen, RED, (posx, int(SQUARESIZE / 2)), RADIUS)
+            else:
+                pygame.draw.circle(screen, YELLOW, (posx, int(SQUARESIZE / 2)), RADIUS)
+        pygame.display.update()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            pygame.draw.rect(scree, BLACK, (0, 0, width, SQUARESIZE))
+            #print(event.pos)
+
+            #ask for player 1 input
+            if turn == 0:
+                posx = event.pos[0]
+                col = int(math.floor(posx/SQUARESIZE))
+                #player 1 will drop a piece on the board
+                if is_valid_location(board, col):
+                    row = get_next_open_row(board, col)
+                    drop_piece(board, row, col, 1)
+                    if winning_move(board, 1):
+                        label = myfont.render("Player 1 wins!!", 1, RED)
+                        screen.blit(label, (40, 10))
+                        game_over = True
+
+            else:#ask for player 2 input
+                posx = event.pos[0]
+                col = int(math.floor(posx/SQUARESIZE))
+                #player2 will drop a piece on the board
+                if is_valid_location(board, col):
+                    row = get_next_open_row(board, col)
+                    drop_piece(board, row, col, 2)
+                    if winning_move(board, 2):
+                        label = myfont.render("Player 2 wins!!", 1, YELLOW)
+                        screen.blit(label, (40, 10))
+                        game_over = True
+
+            print_board(board)
+            draw_board(board)
+            
+            turn += 1
+            turn = turn % 2 #switch between p1 and p2 alternatively
+
+            if game_over:
+                pygame.time.wait(3000)
+
